@@ -1,0 +1,44 @@
+To create a "db_file",
+1) go to the ucsc table browser: http://genome.ucsc.edu/cgi-bin/hgTables
+1.1) we want mammal, human, select hg18 or 19, genes and gene prediction tracks, ucsc genes, known gene, selected fields from selected table
+1.2) click get output to get a list of fields
+1.3) we want name, chrom, strand, txstart, txend, gene symbol (from the 2nd table)
+1.4) copy the results to a file named $genome.tss ex: hg19.tss
+2) remove windows line endings using dos2unix $filename
+3) run tss2db.pl with perl directly on local machines or with qsub on clustered machines
+3.1) perl tss2db.pl $tss_file_name $interval_forward $interval_reverse $output.db_file
+3.2) basic usage: qsub ../pbs_scripts/tss2db.pbs -v IN_FILE=./hg18.tss,OUTPUT_DIR=./,TSS_ARGS="-f 200 -r 100"
+3.3) To use a subset file: qsub ../pbs_scripts/tss2db.pbs -v IN_FILE=./hg18.tss,OUTPUT_DIR=./,TSS_ARGS="-f 200 -r 100",SUBSET_FILE=./subset.genes
+3.4) To use a subset file of form cpp_result_total: qsub ../pbs_scripts/tss2db.pbs -v IN_FILE=./hg18.tss,OUTPUT_DIR=./,TSS_ARGS="-c -f 200 -r 100",SUBSET_FILE=./subset.cpp_result_total
+3.4) To use a subset file of form cpp_result_total and limit to the first N gene symbols: qsub ../pbs_scripts/tss2db.pbs -v IN_FILE=./hg18.tss,OUTPUT_DIR=./,TSS_ARGS="-c -l N -f 200 -r 100",SUBSET_FILE=./subset.cpp_result_total
+
+USAGE: 
+you now have a "DB file" named something like ${genome}_+${FORWRD_INTERVAL}_-${REVERSE_INTERVAL}.db_file ex: hg19_+200_-100.db_file
+
+
+CHANGE LOG
+#deprecated reorder with awk
+%! awk '{$1" "$6" "$2" "$4" "$5" "$3}' we want this to be "name alignID chrom txstart txend strand"
+#deprecated removing the leading line
+
+REVISED 2014/01/28
+
+follow 1 through 2 above
+step 3, use the tss2db_file.pl script.
+this script will handle the flipping of start and end for minus strands correctly and will allow you to set intervals in the forward and minus directions relative to the flipped values.
+
+hg19_tss.db_file_flip is now hg19_tss_+100_-100.db_file.  Meaning the start is -100 from the original start and the end is +100 frmo the original end.
+
+revised 2014/02/02
+symmetry saved us before.  Having uneven offsets requires that we handle the minus strand differently.  For the minus strand, the forward direction is left, so extending the strand forward means subtracting the forward value from the start site.
+
+2014/02/09
+correced another symmetry issue with the minus strand not regenerating the start site into the gene_symbol correctly.  also corrected an issue with hg19_tss_+100_-100.db_file where duplicates were not being removed correctly
+
+length files generated from: http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg18&chromInfoPage= and http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&&chromInfoPage=
+
+2014/08/16
+changed script name, improved instructions, added pbs script, internalized writing to output file, fixed usage reporting issue
+
+2014/09/17
+Relative paths now work for this script.  Added support for subset files containing gene lists.  Added support for subset files of cpp_result_total format.  Added support for limiting the number of genes used from a subset file
