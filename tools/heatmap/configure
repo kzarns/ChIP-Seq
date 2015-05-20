@@ -1,0 +1,27 @@
+#!/bin/bash
+
+os=`uname`
+if [ $os = "Linux" ]; then
+	p=" -lpthread"
+else
+	p=""
+fi
+
+x=0
+while [ $x -eq 0 ]; do
+	read -p "Compile single-threaded? (y/n): " yn
+	case $yn in
+		[Yy]* ) d=" -DSINGLE"; p=""; x=1;;
+		[Nn]* ) d=""; x=1;;
+		* ) echo "Please answer y or n.";; 
+	esac
+done
+
+echo -n -e ".PHONY: all clean\n\n" > Makefile
+echo -n -e "all: cppmatch make_heatmap\n\n" >> Makefile
+echo -n -e "clean:\n" >> Makefile
+echo -n -e "\trm cppmatch make_heatmap\n\n" >> Makefile
+echo -n -e "cppmatch: cppmatch.cpp\n" >> Makefile
+echo -n -e "\tg++ -Wall -O3 -o cppmatch${d} cppmatch.cpp${p}\n\n" >> Makefile
+echo -n -e "make_heatmap: make_heatmap.cpp\n" >> Makefile
+echo -n -e "\tg++ -Wall -O3 -o make_heatmap${d} make_heatmap.cpp${p}\n" >> Makefile

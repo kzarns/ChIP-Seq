@@ -1,0 +1,4 @@
+To compile both cppmatch and make_heatmap, run the following commands:
+
+./configure
+make
